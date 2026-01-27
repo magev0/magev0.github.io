@@ -1,3 +1,4 @@
+https://vipa0z.github.io/cheatsheets/index.html
 https://vipa0z.github.io/2025/11/20/SSRF-exploitation-cheathseet/
 https://vipa0z.github.io/2025/07/08/No-pac/
 https://vipa0z.github.io/2025/07/12/abusing-python-for-privesc/
