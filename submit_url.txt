@@ -1,0 +1,4 @@
+https://vipa0z.github.io/2025/11/20/SSRF-exploitation-cheathseet/
+https://vipa0z.github.io/2025/07/08/No-pac/
+https://vipa0z.github.io/2025/07/12/abusing-python-for-privesc/
+https://vipa0z.github.io/2025/10/22/Remote%20Code%20Execution%20in%20liferay-jenkins/

