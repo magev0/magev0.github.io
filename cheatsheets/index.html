@@ -8,23 +8,23 @@
   <meta http-equiv="expires" content="0">
   
     <title>
-      MazeZero</title>
-  <meta name="author" content="M3zeZer0">
+      Field Notes | M3GEV0</title>
+  <meta name="author" content="John Doe">
   
-  <meta name="description" content="M3zeZer0 blog - Documenting the mechanics of system failure through red team tactics, CTF writeups, malware analysis, and the path into deeper systems hacking.">
+  <meta name="description" content="magev0&#39;s Security blog!">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  
-  <meta property="og:site_name" content="MazeZero"/>
+  <meta property="og:title" content="Field Notes"/>
+  <meta property="og:site_name" content="M3GEV0"/>
 
   
     <meta property="og:image" content="favicon.png"/>
   
 
   
-    <link rel="alternative" href="/atom.xml" title="MazeZero" type="application/atom+xml">
+    <link rel="alternative" href="/atom.xml" title="M3GEV0" type="application/atom+xml">
   
   
     <link href="/favicon.png" rel="icon">
@@ -42,7 +42,7 @@
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
 
   <script src="/js/jquery-2.0.3.min.js"></script>
-  <meta name="title" content="vipa0z">
+  <meta name="title" content="magev0">
   <!-- analytics -->
   
 
@@ -53,8 +53,9 @@
         <link rel="manifest" href="/site.webmanifest" />
 
 <meta name="generator" content="Hexo 7.3.0"></head>
- <body>  
-  <nav id="main-nav" class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+
+    <body class="gitbook-page">
+        <nav id="main-nav" class="navbar navbar-inverse navbar-fixed-top" role="navigation">
 	<div class="container">
 		<button type="button" class="navbar-header navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
 			<span class="sr-only">Toggle navigation</span>
@@ -63,7 +64,7 @@
 			<span class="icon-bar"></span>
 		</button>
 		<a class="navbar-brand" href="/">
-			MazeZero
+			M3GEV0
 		</a>
 		<div class="collapse navbar-collapse nav-menu">
 			<ul class="nav navbar-nav">
@@ -75,8 +76,8 @@
 					</li>
 					
 					<li>
-						<a href="/cheatsheets/" title="Cheatsheets_and_Notes">
-							<i class="fa fa-book"></i>Cheatsheets & Notes
+						<a href="/cheatsheets/" title="My pentesting notes and CTF Cheatsheets">
+							<i class="fa fa-book"></i>CookBook
 						</a>
 					</li>
 					
@@ -109,95 +110,200 @@
 	</div> <!-- container -->
 </nav>
 <div class="clearfix"></div>
-  <div class="container">
-  	<div class="content">
-    	 
-	
-		<div class="page-header">
-			<h1> </h1>
-		</div>
-	
 
+            <div class="gitbook-container">
+                
+                    <!-- 1. Sidebar -->
+                    <aside class="gitbook-sidebar" id="gitbook-sidebar">
+                        <div class="sidebar-resizer" id="sidebar-resizer"></div>
+                        <div class="sidebar-header">
+                            <div class="sidebar-logo">
+                                <img src="/cheatsheets/wizard.png" alt="Wizard Logo"
+                                    style="height: 48px; width: auto; margin-right: 8px; pointer-events: none;">
+                                <span>0zAttacker's Cookbook</span>
+                            </div>
+                            <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                        </div>
 
+                        <div class="sidebar-search">
+                            <input type="text" id="docs-search" placeholder="Search documentation..." />
+                            <i class="fa fa-search"></i>
+                        </div>
 
-	<div class="row page">
-		<!-- cols -->
-		
-					<div class="col-md-12">
-						
+                        <nav class="sidebar-nav" id="sidebar-nav">
+                            <div class="loading-spinner">
+                                <i class="fa fa-spinner fa-spin"></i>
+                                <span>Loading...</span>
+                            </div>
+                        </nav>
 
-							<!-- content -->
-							<div class="mypage">
-								
+                        <div class="sidebar-footer">
+                            <a href="https://github.com/magev0/field-notes" target="_blank" rel="noopener">
+                                <i class="fa fa-github"></i> View on GitHub
+                            </a>
+                        </div>
+                    </aside>
 
-										<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cheatsheets</title>
-  <meta http-equiv="refresh" content="0; url=/cheatsheets/index.md">
-</head>
-<body>
-  <p>If you are not redirected automatically, <a href="/cheatsheets/index.md">open the cheatsheets index</a>.</p>
-</body>
-</html>
+                    <!-- 2. Sidebar Open Button (Visible when sidebar collapsed) -->
+                    <button class="sidebar-open-btn" id="sidebar-open-btn" title="Open Sidebar">
+                        <i class="fa fa-bars"></i>
+                        <span>Menu</span>
+                    </button>
 
-											<div class="article-footer-copyright">
+                    <!-- 3. Markdown Body (Middle Column) -->
+                    <main class="gitbook-main" id="gitbook-content">
+                        <div class="content-header">
+                            <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open Menu">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <div class="breadcrumb" id="breadcrumb">
+                                <a href="/cheatsheets/">Home</a>
+                            </div>
+                            <div style="margin-left: auto;">
+                                <button class="theme-toggle-btn"
+                                    style="background:none; border:none; padding:8px; color:#888;"
+                                    aria-label="Toggle theme">
+                                    <i class="fa fa-moon-o"></i>
+                                </button>
+                            </div>
+                        </div>
 
-</div>
+                        <article class="content-body" id="content-body">
+                            <div class="welcome-screen">
+                                <div class="welcome-image-container" id="rotating-image-container"
+                                    data-images='["109658fbb6d168aacbd2215550b9fd39.jpg","18548e92cc8e5599f164b02af10941eb.jpg","551453940b33fd92226a09ea89c9b4e0.jpg","5ca2e7889681025e8056ea285fa2bbd8.jpg","5f5eae0802ebf25ce3e5015539462f3b.jpg","7ee8afd6ab0e99146a1b2651886c6cf1.jpg","90S Hello GIF by Girly Mags.gif","9778562a09d974ac811779dc64055441.jpg","clown.jpg","favicon (2).png","smoke1.jpg","sr2079a437cd3aws3.png"]'
+                                    style="position: relative; overflow: hidden; min-height: 200px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                                    
+                                        <img src="/images/chsheet/smoke1.jpg"
+                                            alt="Cheatsheet Background" id="rotating-image" class="welcome-image"
+                                            style="max-width: 100%; height: auto; border-radius: 8px; pointer-events: none; opacity: 1; transition: opacity 0.5s ease-in-out;">
+                                        
+                                </div>
+                                <p class="welcome-description">
+                                    My offensive security notes and playbooks. Heads up! These notes are for CTF challenges and authorized pentests only. Don't be a dick and go attack random environments
+                                    seriously, keep it legal and ethical. Use your powers for good (or at least for flags).
 
-							</div>
+                                </p>
 
-							
-									
-											<div>
-												<center>
+                                <div class="quick-links">
+                                    <h3>Browse by Category</h3>
+                                    <div class="quick-links-grid" id="quick-links-grid">
+                                        <div class="loading-spinner">
+                                            <i class="fa fa-spinner fa-spin"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
 
-													<div class="pagination">
+                        <div class="content-footer">
+                            <div class="nav-buttons">
+                                <button class="nav-btn prev" id="prev-btn" disabled>
+                                    <i class="fa fa-chevron-left"></i>
+                                    <span>Previous</span>
+                                </button>
+                                <button class="nav-btn next" id="next-btn" disabled>
+                                    <span>Next</span>
+                                    <i class="fa fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </main>
 
-    
-</div>
+                    <!-- 3. Meta (Right Column -> TOC) -->
+                    <div class="meta">
+                        <aside class="content-toc" id="content-toc">
+                            <div class="toc-header">
+                                <span>On this page</span>
+                            </div>
+                            <nav class="toc-nav" id="toc-nav">
+                                <!-- TOC will be populated by JavaScript -->
+                            </nav>
+                        </aside>
+                    </div>
+            </div>
 
+            <!-- Markdown Parser -->
+            <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+            <!-- Syntax Highlighting -->
+            <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-powershell.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-sql.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-markup.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-css.min.js"></script>
+            <script src="/js/gitbook.js"></script>
 
-												</center>
-											</div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    // Mobile Menu Button Logic
+                    var mobileMenuBtn = document.getElementById('mobile-menu-btn');
+                    var sidebar = document.getElementById('gitbook-sidebar');
+                    var overlay = document.createElement('div');
+                    overlay.className = 'sidebar-overlay';
+                    document.body.appendChild(overlay);
 
-											<!-- comment -->
-											<!--
--->
-											
-													
-															
-					</div> <!-- col-md-9/col-md-12 -->
+                    if (mobileMenuBtn) {
+                        mobileMenuBtn.addEventListener('click', function () {
+                            sidebar.classList.toggle('open');
+                            overlay.classList.toggle('active');
+                        });
 
+                        overlay.addEventListener('click', function () {
+                            sidebar.classList.remove('open');
+                            overlay.classList.remove('active');
+                        });
+                    }
 
+                    // Image Rotation Logic
+                    var imageContainer = document.getElementById('rotating-image-container');
+                    var rotatingImage = document.getElementById('rotating-image');
 
-					
+                    if (imageContainer && rotatingImage) {
+                        var imagesData = imageContainer.getAttribute('data-images');
+                        var images = [];
 
+                        try {
+                            images = JSON.parse(imagesData);
+                        } catch (e) {
+                            console.error('Failed to parse images data:', e);
+                        }
 
-			</div><!-- row -->
+                        if (images && images.length > 1) {
+                            var currentIndex = 0;
 
-			<!--
- -->
+                            // Find current image index
+                            var currentSrc = rotatingImage.src;
+                            for (var i = 0; i < images.length; i++) {
+                                if (currentSrc.includes(encodeURIComponent(images[i]))) {
+                                    currentIndex = i;
+                                    break;
+                                }
+                            }
 
+                            setInterval(function () {
+                                // Fade out
+                                rotatingImage.style.opacity = '0';
 
-			<!-- Fixed TOC Container for hexo-toc.js -->
+                                setTimeout(function () {
+                                    // Change image
+                                    currentIndex = (currentIndex + 1) % images.length;
+                                    rotatingImage.src = '/images/chsheet/' + encodeURIComponent(images[currentIndex]);
 
-	</div>
-  </div>
-  <div class="container-narrow">
-  <footer> <p>
-  
-  &copy; 2026 M3zeZer0's Blog
-  
-</p>
- </footer>
-</div> <!-- container-narrow -->
-  
+                                    // Fade in
+                                    rotatingImage.style.opacity = '1';
+                                }, 500); // Wait for fade out to complete
+                            }, 5000); // Rotate every 5 seconds
+                        }
+                    }
+                });
+            </script>
 
-
-  <a id="gotop" href="#">
+            <a id="gotop" href="#">
   <span>⬆︎TOP</span>
 </a>
 
@@ -228,6 +334,6 @@
         searchFunc(path, 'local-search-input', 'local-search-result');
       </script>
       
-  <script src="/js/theme-toggle.js"></script>
-</body>
-   </html>
+    </body>
+
+    </html>

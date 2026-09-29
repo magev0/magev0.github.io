@@ -1,0 +1,5 @@
+- `JSON Web Token (JWT)`:
+    - JWT-based Authentication
+    - Attacking vulnerable signature verification
+    - Attacking weak signing secrets
+    - Exploiting Algorithm Confusion

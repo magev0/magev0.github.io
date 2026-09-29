@@ -31,7 +31,7 @@ sudo nmap -p 512,513,514 --script rexec-brute,rlogin-brute 10.10.10.10
 cat /etc/hosts.equiv
 
 # Example entries:
-vipa0z     10.10.10.5
+magev0     10.10.10.5
 +               10.10.10.10
 +               +
 ```
@@ -42,7 +42,7 @@ vipa0z     10.10.10.5
 cat ~/.rhosts
 
 # Example entries:
-vipa0z     10.10.10.5
+magev0     10.10.10.5
 +               10.10.10.10
 +               +
 ```
@@ -63,7 +63,7 @@ rlogin 10.10.10.10
 rlogin 10.10.10.10 -l username
 
 # If trusted, no password required
-rlogin 10.10.10.10 -l vipa0z
+rlogin 10.10.10.10 -l magev0
 ```
 
 ### Exploitation
@@ -151,7 +151,7 @@ rwho
 
 # Output:
 # root     web01:pts/0 Dec  2 21:34
-# vipa0z     workstn01:tty1  Dec  2 19:57  2:25
+# magev0     workstn01:tty1  Dec  2 19:57  2:25
 
 # List users on specific host (rusers)
 rusers -al 10.10.10.10

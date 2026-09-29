@@ -27,7 +27,7 @@ if the app is vulnerable, the server will error out.
 ### Identifying the templating engine in use:
 
 this map helps in identifying the templating engine by analyzing the responses:
-![[ss/Pasted image 20251126024146.png]]
+![[ss/ss/Pasted image 20251126024146.png]]
 
 start by injecting the payload `${7*7}` and follow the diagram from left to right, depending on the result of the injection.
 

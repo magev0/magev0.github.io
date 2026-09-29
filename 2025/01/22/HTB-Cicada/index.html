@@ -8,8 +8,8 @@
   <meta http-equiv="expires" content="0">
   
     <title>
-      HackTheBox Cicada Walkthrough | MazeZero</title>
-  <meta name="author" content="M3zeZer0">
+      HackTheBox Cicada Walkthrough | M3GEV0</title>
+  <meta name="author" content="John Doe">
   
   <meta name="description" content="HackThebox Cicada  is easy Windows Active Directory box. it start off with enumerating SMB shares to find a new hire welcome note with a default password. RID-cycle to get a list of usernames, and spray that password to find a user still using it. With a valid user I can query LDAP to find another user with their password stored in their description. That user has access to a share with a dev script used for backup, and more creds. Those creds work to get a shell, and the user is in the Backup Operators group, so  exfil the registry hives and dump the machine hashes.">
   
@@ -17,14 +17,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
   <meta property="og:title" content="HackTheBox Cicada Walkthrough"/>
-  <meta property="og:site_name" content="MazeZero"/>
+  <meta property="og:site_name" content="M3GEV0"/>
 
   
     <meta property="og:image" content="favicon.png"/>
   
 
   
-    <link rel="alternative" href="/atom.xml" title="MazeZero" type="application/atom+xml">
+    <link rel="alternative" href="/atom.xml" title="M3GEV0" type="application/atom+xml">
   
   
     <link href="/favicon.png" rel="icon">
@@ -42,7 +42,7 @@
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
 
   <script src="/js/jquery-2.0.3.min.js"></script>
-  <meta name="title" content="vipa0z">
+  <meta name="title" content="magev0">
   <!-- analytics -->
   
 
@@ -63,7 +63,7 @@
 			<span class="icon-bar"></span>
 		</button>
 		<a class="navbar-brand" href="/">
-			MazeZero
+			M3GEV0
 		</a>
 		<div class="collapse navbar-collapse nav-menu">
 			<ul class="nav navbar-nav">
@@ -75,8 +75,8 @@
 					</li>
 					
 					<li>
-						<a href="/cheatsheets/" title="Cheatsheets_and_Notes">
-							<i class="fa fa-book"></i>Cheatsheets & Notes
+						<a href="/cheatsheets/" title="My pentesting notes and CTF Cheatsheets">
+							<i class="fa fa-book"></i>CookBook
 						</a>
 					</li>
 					
@@ -304,7 +304,7 @@
   <div class="container-narrow">
   <footer> <p>
   
-  &copy; 2026 M3zeZer0's Blog
+  &copy; 2026 John Doe's Blog
   
 </p>
  </footer>

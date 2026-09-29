@@ -1,4 +1,4 @@
-// file with custom additions vipa0z)
+// file with custom additions magev0)
 
 $(document).ready(function () {
     $(window).scroll(function () {

@@ -1,5 +1,4 @@
-https://vipa0z.github.io/cheatsheets/index.html
-https://vipa0z.github.io/2025/11/20/SSRF-exploitation-cheathseet/
-https://vipa0z.github.io/2025/07/08/No-pac/
-https://vipa0z.github.io/2025/07/12/abusing-python-for-privesc/
-https://vipa0z.github.io/2025/10/22/Remote%20Code%20Execution%20in%20liferay-jenkins/
+https://magev0.github.io/images/skill%20assesment.html
+https://magev0.github.io/2025/07/12/abusing-python-for-privesc/
+https://magev0.github.io/2025/07/13/chwoot/
+https://magev0.github.io/about/index.html

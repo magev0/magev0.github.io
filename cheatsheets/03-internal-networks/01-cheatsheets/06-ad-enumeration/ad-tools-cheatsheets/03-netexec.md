@@ -3,7 +3,7 @@ netexec anonymous login
 
 ```
 smbclient -L ip -U 'anon'
-nxc smb ip -u 'vipa0z' -p ''  shares
+nxc smb ip -u 'magev0' -p ''  shares
 ```
 
 dump sam (requires --local-auth and local admin privs)

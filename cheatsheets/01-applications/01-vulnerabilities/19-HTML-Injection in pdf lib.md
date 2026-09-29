@@ -1,0 +1,4 @@
+- `HTML Injection in PDF Generation Libraries`
+    - Introduction to HTML injection in PDF generation libraries
+    - Exploitation of PDF generation vulnerabilities leading to Server-Side Request Forgery (SSRF)
+    - Exploitation of PDF generation vulnerabilities leading to Local File Inclusion (LFI)
